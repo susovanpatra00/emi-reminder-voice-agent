@@ -1,0 +1,4 @@
+pipecat-ai[webrtc,deepgram,cartesia,anthropic,silero,runner]==1.15.0
+python-dotenv
+anthropic
+pytest
