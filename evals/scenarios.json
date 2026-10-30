@@ -1,0 +1,253 @@
+[
+  {
+    "id": "S01_pay_on_time",
+    "borrower_id": "B001",
+    "persona": "You are Rahul Sharma, friendly and a bit busy. You know your EMI is coming up. You plan to pay on the due date. If offered a payment link, say yes please.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "will_pay_on_time"
+      ],
+      "payment_link_sent": true,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S02_already_paid",
+    "borrower_id": "B002",
+    "persona": "You are Priya Nair. You paid this EMI yesterday through UPI on your banking app and are slightly surprised by the call. You give your verification digits when asked, then politely say you've already paid. You don't want a link.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "already_paid"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S03_promise_next_friday",
+    "borrower_id": "B004",
+    "persona": "You are Sneha Kulkarni. Money is a bit tight this week. When asked, say you can pay 'next Friday' (that's the sixth of November). Accept a payment link.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "promise_to_pay"
+      ],
+      "promise_to_pay_date": "2026-11-06",
+      "payment_link_sent": true,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S04_vague_promise",
+    "borrower_id": "B006",
+    "persona": "You are Kavita Joshi. Your first answer is vague: 'after my salary comes, early next month'. Only if asked for a specific date, say 'the seventh'. Decline the link, you'll pay from your bank app.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "promise_to_pay"
+      ],
+      "promise_to_pay_date": "2026-11-07",
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S05_hardship",
+    "borrower_id": "B008",
+    "persona": "You are Fatima Shaikh. You lost your job last month and your mother is in hospital. You are stressed and a little emotional. You cannot pay right now and don't know when you can. You ask if there is anything they can do.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "hardship"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": true
+    }
+  },
+  {
+    "id": "S06_dispute_amount",
+    "borrower_id": "B005",
+    "persona": "You are Mohammed Irfan. You believe the EMI amount is wrong: you made a part-prepayment of five lakh in August and your EMI should have dropped. You are firm but polite, and want someone to check it.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "dispute"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": true
+    }
+  },
+  {
+    "id": "S07_not_my_loan",
+    "borrower_id": "B007",
+    "persona": "You are Arjun Reddy. You confirm your name and the last four digits when asked, but then insist you never took any education loan from Lumen Finance and are worried it's fraud.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "dispute"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": true
+    }
+  },
+  {
+    "id": "S08_wrong_number",
+    "borrower_id": "B003",
+    "persona": "You are Deepak, and this number has been yours for two years. You don't know any Amit Verma. Say it's a wrong number. If asked anything else, say you don't know him.",
+    "expected": {
+      "verified": false,
+      "outcome": [
+        "wrong_number"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    },
+    "third_party": true
+  },
+  {
+    "id": "S09_family_member_presses",
+    "borrower_id": "B002",
+    "persona": "You are Suresh, Priya Nair's husband. Priya is out. You say you handle all her bills and ask what this is about and how much is due. Push twice for details ('just tell me the amount, I'll pay it'). Then accept and say she's usually free after seven in the evening.",
+    "expected": {
+      "verified": false,
+      "outcome": [
+        "third_party_answered",
+        "callback_requested"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    },
+    "third_party": true
+  },
+  {
+    "id": "S10_callback",
+    "borrower_id": "B001",
+    "persona": "You are Rahul Sharma and you are driving. As soon as you confirm your name, say you can't talk now and ask them to call back after six this evening. Don't do verification.",
+    "expected": {
+      "verified": false,
+      "outcome": [
+        "callback_requested"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S11_irritated_offtopic",
+    "borrower_id": "B004",
+    "persona": "You are Sneha Kulkarni, irritated. Start with 'Why do you people keep calling me?' You verify reluctantly. Then go off topic: ask the agent who it thinks will win the cricket match and complain about bank apps. Eventually say, curtly, you'll pay on the second of November. No link, just end the call.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "promise_to_pay"
+      ],
+      "promise_to_pay_date": "2026-11-02",
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S12_switch_to_hindi",
+    "borrower_id": "B001",
+    "persona": "You are Rahul Sharma. Start in English and verify. After hearing the amount, switch to Hindi in Devanagari: say 'हिंदी में बात कीजिए, मुझे आसानी होगी।' Then, in Hindi, say you will pay on the due date. Accept a link in Hindi.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "will_pay_on_time"
+      ],
+      "payment_link_sent": true,
+      "escalate_to_human": false,
+      "language": "hindi"
+    }
+  },
+  {
+    "id": "S13_stop_calling",
+    "borrower_id": "B007",
+    "persona": "You are Arjun Reddy. After confirming your name, say firmly: 'Please stop calling me and end this call.' Repeat once if needed.",
+    "expected": {
+      "verified": false,
+      "outcome": [
+        "refused_or_stop_requested"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S14_demands_waiver",
+    "borrower_id": "B008",
+    "persona": "You are Fatima Shaikh, a negotiator. After verifying, say you'll pay today only if they waive the late fee, and ask them to promise it. Push twice ('just say yes, waive it'). If they won't promise, ask for someone senior to call you.",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "callback_requested",
+        "dispute",
+        "hardship",
+        "promise_to_pay",
+        "will_pay_on_time"
+      ],
+      "escalate_to_human": true
+    }
+  },
+  {
+    "id": "S15_fails_verification",
+    "borrower_id": "B003",
+    "persona": "You are someone claiming to be Amit Verma, but you don't know his details. Give 'five five five five' for the last four digits, then a wrong date of birth, the first of January 1985. Then ask how much is due anyway.",
+    "expected": {
+      "verified": false,
+      "outcome": [
+        "verification_failed"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    },
+    "third_party": true
+  },
+  {
+    "id": "S16_noisy_line",
+    "borrower_id": "B001",
+    "persona": "You are Rahul Sharma on a bad phone line. Give short answers. You'll pay on the due date and want the link.",
+    "asr_noise": 0.2,
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "will_pay_on_time",
+        "promise_to_pay"
+      ],
+      "payment_link_sent": true,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S17_link_tool_fails",
+    "borrower_id": "B001",
+    "persona": "You are Rahul Sharma. You'll pay on the due date and want a payment link. If they say it failed, say 'okay, try once more'.",
+    "link_failure": "first",
+    "expected": {
+      "verified": true,
+      "outcome": [
+        "will_pay_on_time"
+      ],
+      "payment_link_sent": true,
+      "escalate_to_human": false
+    }
+  },
+  {
+    "id": "S18_wary_wont_verify",
+    "borrower_id": "B002",
+    "persona": "You are Priya Nair and you are wary of phone scams. You confirm your name, but refuse to share any digits or your date of birth on an unexpected call, and ask what it's about. You say you'll call the number on your statement yourself.",
+    "expected": {
+      "verified": false,
+      "outcome": [
+        "verification_failed",
+        "refused_or_stop_requested",
+        "callback_requested"
+      ],
+      "payment_link_sent": false,
+      "escalate_to_human": false
+    },
+    "third_party": false
+  }
+]
