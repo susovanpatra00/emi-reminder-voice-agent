@@ -1,6 +1,6 @@
 """Lumen Finance EMI reminder voice agent (Pipecat, browser WebRTC call).
 
-Run:   BORROWER_ID=B002 python bot.py
+Run:   BORROWER_ID=B002 python main.py
 Open:  http://localhost:7860/client  and click Connect.
 """
 
@@ -49,7 +49,7 @@ from agent.call_session import OUTCOMES_DIR, CallSession, says_goodbye
 from agent.prompts import build_system_prompt, opening_instruction
 from agent.tools import pipecat_tools
 
-load_dotenv()  # shell variables win over .env, so BORROWER_ID=B002 python bot.py works
+load_dotenv()  # shell variables win over .env, so BORROWER_ID=B002 python main.py works
 
 LANG = {"english": Language.EN_IN, "hindi": Language.HI}
 

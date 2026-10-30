@@ -14,7 +14,7 @@ OUT = Path(__file__).resolve().parent.parent / "outcomes"
 def main():
     files = sorted(OUT.glob("*.json"))
     if not files:
-        print("No calls saved yet. Make a call with bot.py first.")
+        print("No calls saved yet. Make a call with main.py first.")
         return
     lat, outcomes = [], Counter()
     for f in files:
