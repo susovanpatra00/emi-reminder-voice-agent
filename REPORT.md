@@ -173,13 +173,39 @@ scenario 3/3.
 
 ## Voice calls
 
-> Fill in after test calls: `python -m scripts.latency_summary`
+Tested in the browser (Pipecat SmallWebRTC, Deepgram nova-3, Claude Haiku 5.5, Cartesia), on a laptop with Bluetooth earbuds.
 
 | Metric | Result |
 |---|---|
-| Calls made | |
-| Latency: caller stops → agent starts speaking (median / p90) | |
-| Barge-in (agent stops when interrupted) | |
-| Silence handling (check-in, then close) | |
-| Hindi switch by voice | |
-| Issues heard | |
+| Calls made | 9 (normal, interruption, silence, hardship ×2, family member, Hindi ×3) |
+| Latency: caller stops → agent starts speaking (median / p90) | X.XXs / X.XXs |
+| Typical turn breakdown | LLM first token ~0.75s, speech recognition ~0.5s, voice ~0.1–0.25s, plus end-of-turn wait |
+| Payment-link tool (2s mock) | Filler line starts within ~1s; no dead air |
+| Barge-in | Agent stops as soon as the caller talks over it |
+| Silence | Check-in, then repeat, then polite close |
+| Family member asking for the amount | Nothing disclosed |
+| Hindi switch by voice | Works, natural Hinglish (after fixes below) |
+
+### Failures found only in voice calls
+
+5. **Reply cut off in the hardship flow.** The 300-token reply cap cut off a reply carrying two tool
+   calls, so the account might not have been flagged. The evals used the same cap and missed it. Raised to 1000 (a
+   ceiling only; speech streams, so no latency cost). In the next call the model said it was flagging
+   the account but never called `flag_for_human`. Escalation still happened, because the code forces it for any
+   hardship outcome. That is why that rule lives in code, not the prompt.
+6. **Said the same thing twice at the close.** The model spoke "a colleague will be in touch" and
+   then its closing line said it again. Fix in code: if the model already spoke in that turn, its
+   closing line is dropped and only a short goodbye is added.
+7. **Hindi sounded like a news reader** ("किश्त… देय थी… बकाया है… योजना"). Rewrote the Hindi
+   guidance for everyday Hinglish (EMI, loan, payment kept in English) with example lines, and added an eval check
+   for formal Hindi words. In the same calls, switching language made the agent re-ask the name
+   (it now continues where it was), speech recognition heard Hindi as Turkish (now locked to
+   Hindi after the switch), and the filler and re-ask lines were in English (now in the call's
+   language).
+8. **4–7 seconds of silence on tool turns.** Per-turn latency showed that almost every slow turn
+   (p90 5.1s, max 7.2s) was one where the agent called a tool before speaking (verify, flag
+   for hardship, record a promise date). The caller heard nothing until the model had picked
+   the tool, the tool had run, and a second LLM call had produced the reply. Fix: a short
+   "One moment." / "जी, एक सेकंड।" is spoken as soon as a tool turn starts, unless the
+   agent already spoke in that turn. Time to first sound: p90 5.11s → 1.62s. The time to the
+   actual answer is unchanged; a real fix would remove the second LLM call or use a faster model.
