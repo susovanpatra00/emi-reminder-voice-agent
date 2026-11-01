@@ -302,6 +302,6 @@ def upcoming_calendar(today: date, days: int = 21) -> str:
     lines = []
     for i in range(days):
         d = today + timedelta(days=i)
-        tag = " (today)" if i == 0 else " (tomorrow)" if i == 1 else ""
+        tag = " (today)" if i == 0 else " (tomorrow)" if i == 1 else f" (in {i} days)"
         lines.append(f"{d.strftime('%a')} {d.isoformat()}{tag}")
     return "\n".join(lines)

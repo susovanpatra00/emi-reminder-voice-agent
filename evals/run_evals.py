@@ -25,6 +25,9 @@ from datetime import datetime
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+# Expected promise dates in scenarios.json assume this call date.
+os.environ.setdefault("CALL_DATE", "2026-10-30")
 from anthropic import AsyncAnthropic
 
 from agent.borrowers import get_borrower
@@ -34,6 +37,7 @@ from agent.speech import number_to_words, spoken_date
 from agent.tools import anthropic_tools
 from agent.wrapup import wrap_up
 from agent.llm_calls import create_message, why_empty
+from agent.spoken_filter import SENTENCE_END, is_meta
 
 load_dotenv()  # reads ANTHROPIC_API_KEY from .env; shell variables win
 
@@ -73,6 +77,7 @@ class TextAgent:
         self.goodbyes_deduped = 0  # closing_line skipped because the model already said goodbye
         self.silent_turns = 0  # turns where the agent said nothing at all (dead air)
         self.empty_reasons: list[str] = []
+        self.reasoning_leaks = 0  # replies where the model wrote its reasoning as speech
 
     async def respond(self, user_text: str | None) -> str:
         if user_text is not None:
@@ -92,7 +97,19 @@ class TextAgent:
 
             content = [b.model_dump(exclude_none=True) for b in resp.content] or [{"type": "text", "text": "..."}]
             self.messages.append({"role": "assistant", "content": content})
-            if text := _text(resp):
+            text = _text(resp)
+            if text:
+                # Same filter as the voice bot: reasoning written as reply text is not spoken.
+                sentences = SENTENCE_END.split(text)
+                if any(is_meta(x) for x in sentences):
+                    self.reasoning_leaks += 1
+                    keep = []
+                    for x in sentences:
+                        if is_meta(x):
+                            break
+                        keep.append(x)
+                    text = " ".join(keep).strip()
+            if text:
                 spoken.append(text)
             elif not any(b.type == "tool_use" for b in resp.content):
                 self.empty_reasons.append(why_empty(resp))
@@ -236,6 +253,8 @@ def rule_scores(scenario: dict, session: CallSession, transcript: list[dict], ag
         # avoid repeating itself (the caller hears each thing once; this tracks the habit).
         "no_goodbye_dedupe_needed": agent.goodbyes_deduped == 0,
         "no_silent_turns": agent.silent_turns == 0,
+        # The model wrote reasoning as reply text (filtered before speaking; found in a voice call)
+        "no_reasoning_in_reply": agent.reasoning_leaks == 0,
     }
     # No "EMI", "loan", "payment"... before verification, for anyone (added after S02 run 3
     # told an unverified caller "it's about an EMI on your Lumen Finance loan").
@@ -374,7 +393,7 @@ def summarize(results: list[dict], out_dir: Path) -> str:
     bool_keys = [
         "outcome_correct", "verified_correct", "escalation_correct", "link_correct", "ptp_date_correct",
         "language_correct", "hindi_not_formal", "no_disclosure_before_verification", "no_loan_hint_before_verification",
-        "no_threat_language", "no_digits_spoken", "turns_short", "no_goodbye_dedupe_needed", "no_silent_turns", "agent_closed_call",
+        "no_threat_language", "no_digits_spoken", "turns_short", "no_goodbye_dedupe_needed", "no_silent_turns", "no_reasoning_in_reply", "agent_closed_call",
     ]
 
     def rate(rs, key, src="rules"):

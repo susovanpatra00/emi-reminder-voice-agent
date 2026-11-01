@@ -10,13 +10,16 @@ from pathlib import Path
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "borrowers.json"
 
-# The mock data is written against a fixed call date so evals are reproducible
-# ("ten days overdue" stays true). Override with CALL_DATE=YYYY-MM-DD.
-DEFAULT_CALL_DATE = "2026-10-30"
+# The due dates in borrowers.json are written as if the call happens on DATA_BASE_DATE.
+# Calls use the real date (so the agent never argues with a caller about what day it is),
+# and every due date is shifted by the same amount, so "ten days overdue" stays true on
+# any day. Evals pin CALL_DATE=DATA_BASE_DATE so their expected dates stay fixed.
+DATA_BASE_DATE = date(2026, 10, 30)
 
 
 def call_date() -> date:
-    return date.fromisoformat(os.getenv("CALL_DATE", DEFAULT_CALL_DATE))
+    env = os.getenv("CALL_DATE")
+    return date.fromisoformat(env) if env else date.today()
 
 
 @dataclass(frozen=True)
@@ -50,7 +53,7 @@ def load_borrowers(path: Path = DATA_PATH) -> dict[str, Borrower]:
     for r in rows:
         r = dict(r)
         r["dob"] = date.fromisoformat(r["dob"])
-        r["due_date"] = date.fromisoformat(r["due_date"])
+        r["due_date"] = date.fromisoformat(r["due_date"]) + (call_date() - DATA_BASE_DATE)
         out[r["borrower_id"]] = Borrower(**r)
     return out
 

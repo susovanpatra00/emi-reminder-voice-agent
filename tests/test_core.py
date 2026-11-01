@@ -98,3 +98,21 @@ def test_closing_line_not_repeated():
     assert closing_to_speak("I'm flagging this so a colleague can be in touch.", planned) == "Take care, goodbye."
     assert closing_to_speak("Thanks Rahul, have a good day!", planned) == ""
     assert closing_to_speak("ठीक है।", "x", "hindi") == "धन्यवाद, नमस्ते।"
+
+
+def test_reasoning_text_is_detected():
+    from agent.spoken_filter import is_meta
+    assert is_meta("The caller said they are Priya and spoke Hindi-ish.")
+    assert is_meta("They spoke Hindi, so yes, call set_language.")
+    assert not is_meta("Should I send a payment link to your phone?")
+    assert not is_meta("ठीक है, एक सेकंड।")
+
+
+def test_due_dates_follow_the_call_date(monkeypatch):
+    from datetime import date
+    from agent.borrowers import get_borrower
+    monkeypatch.setenv("CALL_DATE", "2026-11-03")  # four days after the data's base date
+    b = get_borrower("B002")
+    assert b.due_date == date(2026, 10, 24)
+    s = CallSession(b)
+    assert "ten days" in s.loan_facts()["status"]

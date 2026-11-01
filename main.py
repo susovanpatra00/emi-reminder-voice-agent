@@ -48,6 +48,7 @@ from pipecat.workers.runner import WorkerRunner
 from agent.borrowers import get_borrower
 from agent.call_session import OUTCOMES_DIR, CallSession, closing_to_speak
 from agent.prompts import build_system_prompt, opening_instruction
+from agent.spoken_filter import SpokenTextFilter
 from agent.tools import pipecat_tools
 
 load_dotenv()  # shell variables win over .env, so BORROWER_ID=B002 python main.py works
@@ -209,6 +210,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             stt,
             user_aggregator,
             llm,
+            SpokenTextFilter(),  # drops reasoning text the model wrote as if it were speech
             turn_text,
             tts,
             transport.output(),
