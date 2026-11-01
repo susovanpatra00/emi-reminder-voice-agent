@@ -7,7 +7,12 @@ from __future__ import annotations
 
 from .call_session import CallSession, upcoming_calendar
 
-AGENT_NAME = "Ananya"
+import os
+
+# The agent's persona must match the TTS voice: Hindi verbs change with the speaker's gender
+# ("भेज रही हूं" vs "भेज रहा हूं"), so a male voice saying feminine forms sounds wrong.
+AGENT_GENDER = os.getenv("AGENT_GENDER", "female").strip().lower()  # female | male
+AGENT_NAME = os.getenv("AGENT_NAME") or ("Ananya" if AGENT_GENDER == "female" else "Rohan")
 
 SYSTEM_PROMPT = """\
 You are {agent_name}, calling on behalf of Lumen Finance. You are on a live phone call. \
@@ -160,6 +165,10 @@ Write it in Devanagari, including the English words (ईएमआई, लोन,
 ओवरड्यू, अकाउंट, वेरिफ़ाई, नंबर, टू-व्हीलर), so the voice pronounces everything in one \
 accent. Say amounts and dates in Hindi words ("चार हज़ार तीन सौ पचास रुपये", "बीस अक्टूबर").
 
+Grammar gender: you are {agent_gender}, so use {agent_forms} when talking about yourself. \
+{name} is {borrower_gender}, so use {borrower_forms} when talking about them. The examples \
+below are written for a {example_note}; change the verb endings to fit this call.
+
 The same short-turn rules apply in Hindi. Examples of the right style (adapt, don't copy):
 - "जी, बिल्कुल, हिंदी में बात करते हैं। आप अपने रजिस्टर्ड नंबर के लास्ट फ़ोर डिजिट्स बता \
 दीजिए?"
@@ -181,6 +190,13 @@ def build_system_prompt(session: CallSession) -> str:
     b = session.borrower
     return SYSTEM_PROMPT.format(
         agent_name=AGENT_NAME,
+        agent_gender=AGENT_GENDER,
+        agent_forms='feminine forms ("कर रही हूं", "बता देती हूं")' if AGENT_GENDER == "female"
+        else 'masculine forms ("कर रहा हूं", "बता देता हूं")',
+        borrower_gender=b.gender,
+        borrower_forms='feminine forms ("कर पाएंगी", "बता दीजिए")' if b.gender == "female"
+        else 'masculine forms ("कर पाएंगे", "बता दीजिए")',
+        example_note="female agent speaking to a female borrower",
         name=b.name,
         first_name=b.first_name,
         today_spoken=spoken_date(session.today, with_weekday=True),

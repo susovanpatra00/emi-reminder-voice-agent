@@ -47,7 +47,7 @@ from pipecat.workers.runner import WorkerRunner
 
 from agent.borrowers import get_borrower
 from agent.call_session import OUTCOMES_DIR, CallSession, closing_to_speak
-from agent.prompts import build_system_prompt, opening_instruction
+from agent.prompts import AGENT_GENDER, build_system_prompt, opening_instruction
 from agent.spoken_filter import SpokenTextFilter
 from agent.tools import pipecat_tools
 
@@ -59,7 +59,8 @@ LANG = {"english": Language.EN_IN, "hindi": Language.HI}
 FILLERS = {
     "send_payment_link": {
         "english": ["Sure, sending that to you now.", "One moment, I'm sending it right away."],
-        "hindi": ["जी, अभी भेज रही हूं।", "एक सेकंड, लिंक भेज रही हूं।"],
+        "hindi": (["जी, अभी भेज रही हूं।", "एक सेकंड, लिंक भेज रही हूं।"] if AGENT_GENDER == "female"
+                  else ["जी, अभी भेज रहा हूं।", "एक सेकंड, लिंक भेज रहा हूं।"]),
     },
 }
 # Said the moment a tool turn starts, before the model's real reply is ready.
@@ -266,7 +267,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             session.ended = True
             goodbye = "I can't hear you, so I'll try again later. Thank you, goodbye."
             if session.language == "hindi":
-                goodbye = "मुझे आपकी आवाज़ नहीं आ रही है, मैं बाद में फिर से कॉल करूँगी। धन्यवाद।"
+                goodbye = ("मुझे आपकी आवाज़ नहीं आ रही है, मैं बाद में फिर से कॉल "
+                           + ("करूँगी" if AGENT_GENDER == "female" else "करूँगा") + "। धन्यवाद।")
             await aggregator.push_frame(TTSSpeakFrame(goodbye))
             await aggregator.push_frame(EndWorkerFrame())
 
