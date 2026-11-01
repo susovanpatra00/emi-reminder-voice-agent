@@ -113,7 +113,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         settings=AnthropicLLMService.Settings(
             model=os.getenv("LLM_MODEL", "claude-haiku-5-5"),
             system_instruction=build_system_prompt(session),
-            max_tokens=300,  # spoken turns are short; a cap also bounds worst-case latency
+            max_tokens=1000,  # ceiling only (replies stream); 300 cut off tool calls in the hardship flow
             # The system prompt and tools are identical on every turn, so cache them.
             enable_prompt_caching=True,
         ),

@@ -86,7 +86,7 @@ class TextAgent:
                 system=self.system,
                 messages=self.messages,
                 tools=self.tools,
-                max_tokens=300,
+                max_tokens=1000,
             )
             self.llm_secs.append(time.perf_counter() - t0)
 
