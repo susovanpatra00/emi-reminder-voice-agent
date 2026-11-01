@@ -178,7 +178,7 @@ Tested in the browser (Pipecat SmallWebRTC, Deepgram nova-3, Claude Haiku 5.5, C
 | Metric | Result |
 |---|---|
 | Calls made | 9 (normal, interruption, silence, hardship ×2, family member, Hindi ×3) |
-| Latency: caller stops → agent starts speaking (median / p90) | X.XXs / X.XXs |
+| Latency: caller stops → agent starts speaking (median / p90 / max) | 1.54s / 1.87s / 4.13s (22 turns, 4 calls, final code) |
 | Typical turn breakdown | LLM first token ~0.75s, speech recognition ~0.5s, voice ~0.1–0.25s, plus end-of-turn wait |
 | Payment-link tool (2s mock) | Filler line starts within ~1s; no dead air |
 | Barge-in | Agent stops as soon as the caller talks over it |

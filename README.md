@@ -92,7 +92,14 @@ Measured with Pipecat's `UserBotLatencyObserver`: time from the caller stopping 
 first agent audio, per turn, saved with each call and summarised by `scripts.latency_summary`.
 Debug logs show a per-turn breakdown (endpointing wait, STT, LLM, TTS).
 
-*Fill in your measured median / p90 here after your test calls.*
+Measured over 22 turns in 4 browser calls with the final code: **median 1.54s, p90 1.87s,
+max 4.13s**. A typical turn is about 0.5s speech recognition, 0.75s to the LLM's first token
+and 0.1–0.25s to first audio, plus the wait to be sure the caller has finished.
+
+On turns where a tool runs first (verify, record a promise, flag for a colleague), the
+agent says a short "One moment" straight away. Before that change these turns left
+4–7 seconds of silence (p90 5.11s). The time to the actual answer on those turns is
+unchanged; removing the second LLM call would be the real fix.
 
 What reduces it: everything streams (STT → LLM tokens → TTS sentence by sentence), short replies,
 a small fast model, pre-formatted facts so the model writes less, and fillers that cover tool time.
