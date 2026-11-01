@@ -4,6 +4,8 @@ A voice agent that calls a borrower about an upcoming or overdue EMI, verifies w
 to, reminds them clearly, finds out what they intend to do, offers a payment link, and records a
 structured outcome. The call runs in the browser; no phone number is needed.
 
+**Demo video (4 min):** https://drive.google.com/file/d/1a12b3w-geQpL1OzXnkKGkBQ06Z42OD-Z/view?usp=drive_link — normal call, hardship call, Hindi call, and the outcome record
+
 ## Run it
 
 ```bash

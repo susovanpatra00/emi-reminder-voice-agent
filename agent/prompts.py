@@ -8,7 +8,9 @@ from __future__ import annotations
 from .call_session import CallSession, upcoming_calendar
 
 import os
+from dotenv import load_dotenv
 
+load_dotenv()
 # The agent's persona must match the TTS voice: Hindi verbs change with the speaker's gender
 # ("भेज रही हूं" vs "भेज रहा हूं"), so a male voice saying feminine forms sounds wrong.
 AGENT_GENDER = os.getenv("AGENT_GENDER", "female").strip().lower()  # female | male
