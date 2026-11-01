@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 from anthropic import AsyncAnthropic
 
 from agent.borrowers import get_borrower
-from agent.call_session import CallSession, says_goodbye
+from agent.call_session import CallSession, closing_to_speak
 from agent.prompts import build_system_prompt, opening_instruction
 from agent.speech import number_to_words, spoken_date
 from agent.tools import anthropic_tools
@@ -108,10 +108,12 @@ class TextAgent:
             if self.session.ended:
                 # Same rule as the voice bot: don't speak the closing line if the model
                 # already said goodbye in the reply that ended the call.
-                if says_goodbye(" ".join(spoken)):
-                    self.goodbyes_deduped += 1
-                else:
-                    spoken.append(self.session.closing_line or "")
+                planned = self.session.closing_line or ""
+                closing = closing_to_speak(" ".join(spoken), planned, self.session.language)
+                if closing != planned:
+                    self.goodbyes_deduped += 1  # model spoke alongside end_call
+                if closing:
+                    spoken.append(closing)
                 break
         said = " ".join(s for s in spoken if s)
         if not said:
@@ -228,8 +230,8 @@ def rule_scores(scenario: dict, session: CallSession, transcript: list[dict], ag
         # words ("one lakh twenty-five thousand rupees" alone is six words).
         "turns_short": all(w <= 30 for w in words),
         # The final turn should be only the closing line, not extra text plus a second goodbye
-        # The model said goodbye itself before end_call, so the safety net had to drop the
-        # closing line (the caller still hears one goodbye; this tracks the model's habit).
+        # The model spoke in the same reply as end_call, so its closing_line was dropped to
+        # avoid repeating itself (the caller hears each thing once; this tracks the habit).
         "no_goodbye_dedupe_needed": agent.goodbyes_deduped == 0,
         "no_silent_turns": agent.silent_turns == 0,
     }

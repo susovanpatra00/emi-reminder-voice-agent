@@ -281,6 +281,22 @@ def says_goodbye(text: str) -> bool:
     return any(w in t for w in _GOODBYE_WORDS)
 
 
+def closing_to_speak(already_said: str, closing_line: str, language: str = "english") -> str:
+    """What to speak after end_call so the caller hears each thing once.
+
+    The model is told to put everything in closing_line and say nothing else in the
+    reply that ends the call, but it often speaks first anyway (e.g. "I'm flagging your
+    account so a colleague can be in touch" followed by a closing_line that says the
+    colleague will be in touch again). So: if it already spoke, drop its closing_line and
+    only add a short goodbye if it hasn't said one.
+    """
+    if not already_said.strip():
+        return closing_line
+    if says_goodbye(already_said):
+        return ""
+    return "धन्यवाद, नमस्ते।" if language == "hindi" else "Take care, goodbye."
+
+
 def upcoming_calendar(today: date, days: int = 21) -> str:
     """A small calendar so the model can turn 'next Friday' into a real date."""
     lines = []

@@ -45,7 +45,7 @@ from pipecat.transports.base_transport import BaseTransport, TransportParams
 from pipecat.workers.runner import WorkerRunner
 
 from agent.borrowers import get_borrower
-from agent.call_session import OUTCOMES_DIR, CallSession, says_goodbye
+from agent.call_session import OUTCOMES_DIR, CallSession, closing_to_speak
 from agent.prompts import build_system_prompt, opening_instruction
 from agent.tools import pipecat_tools
 
@@ -138,10 +138,11 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             # once the audio has flushed.
             await params.result_callback(result, properties=FunctionCallResultProperties(run_llm=False))
             await asyncio.sleep(0.05)  # let any text from this reply reach the tracker
-            if says_goodbye(turn_text.text):
-                logger.info("Model already said goodbye; skipping closing_line")
-            else:
-                await params.llm.push_frame(TTSSpeakFrame(session.closing_line))
+            closing = closing_to_speak(turn_text.text, session.closing_line, session.language)
+            if closing != session.closing_line:
+                logger.info(f"Model already spoke this turn; closing with {closing!r} instead of closing_line")
+            if closing:
+                await params.llm.push_frame(TTSSpeakFrame(closing))
             await params.llm.push_frame(EndWorkerFrame())
             return
 

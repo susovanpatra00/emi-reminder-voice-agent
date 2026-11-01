@@ -89,3 +89,12 @@ def test_facts_have_no_digits():
     assert not any(re.search(r"\d", v) for v in r["loan"].values()), r["loan"]
     link = run(s.handle("send_payment_link", {}))
     assert link["to"] == "the number ending four eight two one"
+
+
+def test_closing_line_not_repeated():
+    from agent.call_session import closing_to_speak
+    planned = "Take care, Rahul. A colleague will be in touch."
+    assert closing_to_speak("", planned) == planned
+    assert closing_to_speak("I'm flagging this so a colleague can be in touch.", planned) == "Take care, goodbye."
+    assert closing_to_speak("Thanks Rahul, have a good day!", planned) == ""
+    assert closing_to_speak("ठीक है।", "x", "hindi") == "धन्यवाद, नमस्ते।"
