@@ -23,6 +23,7 @@ from pipecat.frames.frames import (
     LLMRunFrame,
     TTSSpeakFrame,
     TTSUpdateSettingsFrame,
+    STTUpdateSettingsFrame,
 )
 from pipecat.observers.user_bot_latency_observer import UserBotLatencyObserver
 from pipecat.pipeline.pipeline import Pipeline
@@ -55,11 +56,15 @@ LANG = {"english": Language.EN_IN, "hindi": Language.HI}
 
 # Spoken while a slow tool runs, so the caller never hears dead air.
 FILLERS = {
-    "send_payment_link": [
-        "Sure, sending that to you now.",
-        "One moment, I'm sending it right away.",
-    ],
+    "send_payment_link": {
+        "english": ["Sure, sending that to you now.", "One moment, I'm sending it right away."],
+        "hindi": ["जी, अभी भेज रही हूं।", "एक सेकंड, लिंक भेज रही हूं।"],
+    },
 }
+# Speech recognition per call language. "multi" follows English/Hindi code-switching, but on
+# Hindi-heavy speech it sometimes guessed other languages (a Hindi reply once came back as
+# Turkish), so once the caller switches to Hindi we lock it to Hindi.
+STT_LANG = {"english": "multi", "hindi": "hi"}
 
 IDLE_TIMEOUT_SECS = float(os.getenv("IDLE_TIMEOUT_SECS", "7"))
 
@@ -113,7 +118,7 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         settings=AnthropicLLMService.Settings(
             model=os.getenv("LLM_MODEL", "claude-haiku-5-5"),
             system_instruction=build_system_prompt(session),
-            max_tokens=1000,  # ceiling only (replies stream); 300 cut off tool calls in the hardship flow
+            max_tokens=1000,  # ceiling only; 300 cut off tool calls (hardship flow)
             # The system prompt and tools are identical on every turn, so cache them.
             enable_prompt_caching=True,
         ),
@@ -131,6 +136,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         if name == "set_language" and "error" not in result:
             await params.llm.push_frame(
                 TTSUpdateSettingsFrame(delta=CartesiaTTSService.Settings(language=LANG[session.language]))
+            )
+            await params.llm.push_frame(
+                STTUpdateSettingsFrame(delta=DeepgramSTTService.Settings(language=STT_LANG[session.language])),
+                FrameDirection.UPSTREAM,
             )
 
         if name == "end_call" and session.ended:
@@ -162,7 +171,8 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
         ending_batch = any(c.function_name == "end_call" for c in function_calls)
         for call in function_calls:
             if call.function_name in FILLERS:
-                await tts.queue_frame(TTSSpeakFrame(random.choice(FILLERS[call.function_name])))
+                lines = FILLERS[call.function_name]
+                await tts.queue_frame(TTSSpeakFrame(random.choice(lines.get(session.language, lines["english"]))))
                 break
 
     # ------------------------------------------------------------- pipeline
