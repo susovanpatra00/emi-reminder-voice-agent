@@ -61,6 +61,13 @@ FILLERS = {
         "hindi": ["जी, अभी भेज रही हूं।", "एक सेकंड, लिंक भेज रही हूं।"],
     },
 }
+# Said the moment a tool turn starts, before the model's real reply is ready.
+QUICK_ACK = {
+    "english": ["One moment.", "Okay, one moment.", "Just a second."],
+    "hindi": ["जी, एक सेकंड।", "ठीक है, एक सेकंड।"],
+}
+QUICK_ACK_TOOLS = {"verify_identity", "record_promise_to_pay", "schedule_callback", "flag_for_human"}
+
 # Speech recognition per call language. "multi" follows English/Hindi code-switching, but on
 # Hindi-heavy speech it sometimes guessed other languages (a Hindi reply once came back as
 # Turkish), so once the caller switches to Hindi we lock it to Hindi.
@@ -168,12 +175,22 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
     @llm.event_handler("on_function_calls_started")
     async def on_function_calls_started(service, function_calls):
         nonlocal ending_batch
-        ending_batch = any(c.function_name == "end_call" for c in function_calls)
-        for call in function_calls:
-            if call.function_name in FILLERS:
-                lines = FILLERS[call.function_name]
+        names = [c.function_name for c in function_calls]
+        ending_batch = "end_call" in names
+        # The closing line covers an ending turn; if the model already spoke this turn the
+        # caller isn't waiting in silence. Otherwise fill the gap: a tool turn needs a second
+        # LLM call before anything is said, which voice tests showed as 4-7s of dead air.
+        await asyncio.sleep(0.05)  # let text already streamed this reply reach the tracker
+        if ending_batch or turn_text.text.strip():
+            return
+        for name in names:
+            if name in FILLERS:
+                lines = FILLERS[name]
                 await tts.queue_frame(TTSSpeakFrame(random.choice(lines.get(session.language, lines["english"]))))
-                break
+                return
+        if any(n in QUICK_ACK_TOOLS for n in names):
+            lines = QUICK_ACK[session.language] if session.language in QUICK_ACK else QUICK_ACK["english"]
+            await tts.queue_frame(TTSSpeakFrame(random.choice(lines)))
 
     # ------------------------------------------------------------- pipeline
 
