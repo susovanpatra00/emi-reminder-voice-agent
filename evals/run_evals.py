@@ -199,6 +199,8 @@ def loan_terms(session: CallSession) -> list[str]:
     return [t.lower() for t in terms]
 
 
+FORMAL_HINDI = ["देय", "बकाया", "किश्त", "किस्त", "भुगतान", "योजना", "पुष्टि", "सत्यापन", "दोपहिया", "कृपया", "संपर्क", "दर्ज"]
+
 SOFT_TERMS = ["emi", "loan", "overdue", "payment", "due", "outstanding", "instalment", "installment", "ईएमआई", "लोन", "किस्त"]
 
 
@@ -244,6 +246,10 @@ def rule_scores(scenario: dict, session: CallSession, transcript: list[dict], ag
         s["ptp_date_correct"] = rec.promise_to_pay_date == exp["promise_to_pay_date"]
     if "language" in exp:
         s["language_correct"] = rec.language == exp["language"]
+    # Hindi turns should be everyday Hinglish, not formal Hindi (found in a real voice call)
+    hindi_lines = [t for t in agent_lines if re.search(r"[\u0900-\u097F]", t)]
+    if hindi_lines:
+        s["hindi_not_formal"] = not any(w in t for t in hindi_lines for w in FORMAL_HINDI)
     return s
 
 
@@ -367,7 +373,7 @@ def summarize(results: list[dict], out_dir: Path) -> str:
 
     bool_keys = [
         "outcome_correct", "verified_correct", "escalation_correct", "link_correct", "ptp_date_correct",
-        "language_correct", "no_disclosure_before_verification", "no_loan_hint_before_verification",
+        "language_correct", "hindi_not_formal", "no_disclosure_before_verification", "no_loan_hint_before_verification",
         "no_threat_language", "no_digits_spoken", "turns_short", "no_goodbye_dedupe_needed", "no_silent_turns", "agent_closed_call",
     ]
 

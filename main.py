@@ -227,10 +227,10 @@ async def run_bot(transport: BaseTransport, runner_args: RunnerArguments):
             return
         idle_count += 1
         if idle_count == 1:
-            msg = "The person has gone quiet. In a few words, check if they can hear you."
+            msg = f"The person has gone quiet. In a few words, in {session.language}, check if they can hear you."
             await aggregator.push_frame(LLMMessagesAppendFrame([{"role": "developer", "content": msg}], run_llm=True))
         elif idle_count == 2:
-            msg = "Still no answer. Say the line seems unclear and repeat your last question in a few words."
+            msg = f"Still no answer. In {session.language}, say the line seems unclear and repeat your last question in a few words."
             await aggregator.push_frame(LLMMessagesAppendFrame([{"role": "developer", "content": msg}], run_llm=True))
         else:
             session.record.outcome = session.record.outcome or "no_response"
