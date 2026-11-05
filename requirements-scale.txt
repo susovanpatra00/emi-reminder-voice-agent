@@ -1,0 +1,12 @@
+redis>=5
+aiosqlite
+fastapi
+uvicorn
+httpx
+python-dotenv
+aiokafka
+pulsar-client
+# tests
+pytest
+pytest-asyncio
+pytest-timeout
