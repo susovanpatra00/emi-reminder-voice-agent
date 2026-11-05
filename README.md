@@ -28,6 +28,17 @@ python -m evals.run_evals -s S05 S09 -n 5
 python -m scripts.latency_summary        # voice latency over all saved calls
 ```
 
+## Scale: from one call to many
+
+The single-call bot is wrapped in a pipeline: a scheduler reads due EMIs from the database and publishes call jobs to a queue (Kafka or Pulsar, same interface). Workers pull jobs and, right before dialing, check Redis for "already paid / opted out / duplicate / daily cap", falling back to the database on a cache miss. A signed payment webhook marks the EMI paid in the database first, then in Redis, so a borrower who pays after their job is queued is never called.
+
+- 29 tests pass on real Redis, Kafka 3.9 and Pulsar 3.3, including the paid-after-queued race
+- Both brokers benchmarked (about 46k and 26k msgs/s on a laptop); either is far above what one lakh calls a day needs
+- Not claimed: any 5,000-concurrent-call test. The pipeline was tested with simulated calls, not live STT/LLM/TTS
+
+Details, design and honest limits: [scale/README.md](scale/README.md)
+
+
 ## How the conversation is structured
 
 ```
@@ -128,3 +139,4 @@ barge-in. The simulated borrower is more cooperative and articulate than real pe
 from the same model family as the agent, which may make it more lenient.
 
 See `REPORT.md` for results and failures found.
+
